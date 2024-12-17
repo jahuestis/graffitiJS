@@ -1,0 +1,15 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;    
+    color: lime;
+    background-color: black;
+
+}
+
+#canvas {
+    border: 2px solid lime;
+    padding: 2px;
+    width: 50%;
+    image-rendering: pixelated; /* For crisp scaling */
+    image-rendering: crisp-edges; /* Alternative for some browsers */
+}

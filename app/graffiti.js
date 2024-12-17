@@ -6,8 +6,8 @@ var pixels;
 var width;
 var height;
 var canvasLoaded = false;
-const upscale = 10;
-var canvasPosition = [0, 0];
+const upscale = 8;
+var canvasPosition;
 
 const colors = ['black', 'red', 'orange', 'yellow', 'lime', 'cyan', 'magenta', 'white'];
 var mouseX = 0;
@@ -40,6 +40,7 @@ socket.addEventListener('message', (event) => {
         height = data.height;
         canvas.width = width * upscale;
         canvas.height = height * upscale;
+        canvasPosition = [width / 2, height / 2];
         canvasLoaded = true;
     } else if (messageType === 'pixelchange') {
         const data = JSON.parse(message.data);

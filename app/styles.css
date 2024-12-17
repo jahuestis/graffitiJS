@@ -13,3 +13,43 @@ body {
     image-rendering: pixelated; /* For crisp scaling */
     image-rendering: crisp-edges; /* Alternative for some browsers */
 }
+
+.red {
+    color: red;
+    accent-color: red;
+}
+
+.orange {
+    color: orange;
+    accent-color: orange;
+}
+
+.yellow {
+    color: yellow;
+    accent-color: yellow;
+}
+
+.lime {
+    color: lime;
+    accent-color: lime;
+}
+
+.cyan {
+    color: cyan;
+    accent-color: cyan;
+}
+
+.magenta {
+    color: magenta;
+    accent-color: magenta;
+}
+
+.white {
+    color: white;
+    accent-color: white;
+}
+
+.black {
+    color: gray;
+    accent-color: gray;
+}

@@ -30,6 +30,7 @@ colorButtons.forEach(color => {
     });
 });
 
+const alertElement = document.getElementById('alert');
 
 // -- Server/Client handling -- 
 const socket = new WebSocket('ws://localhost:3000')
@@ -47,12 +48,18 @@ socket.addEventListener('message', (event) => {
         canvas.height = height * upscale;
         canvasLoaded = true;
     } else if (messageType === 'pixelchange') {
+        alertElement.style.display = 'none';
+
         const data = JSON.parse(message.data);
         const pixelPosition = data.position;
         const pixelColor = data.color;
 
         console.log(`pixelchange: ${pixelPosition[0]}, ${pixelPosition[1]}, ${pixelColor}`);
         pixels[pixelPosition[0]][pixelPosition[1]] = pixelColor;
+    } else if (messageType === 'alert') {
+        const data = JSON.parse(message.data);
+        alertElement.textContent = data.text;
+        alertElement.style.display = 'block';
     } else {
         console.log(event.data);
     }
@@ -102,6 +109,7 @@ window.onload = () => {
         event.preventDefault(); // Disable the default right-click menu
     });
 
+    alertElement.style.display = 'none';
     requestAnimationFrame(update);
 }
 
@@ -129,9 +137,26 @@ document.addEventListener('mousemove', function(event) {
 });
 
 function update() {
+    // Offset canvas
     if (offsetting) {
-        canvasOffset = [canvasOffset[0] + (mouseX - mouseXPrev), canvasOffset[1] + (mouseY - mouseYPrev)];
+        canvasOffset[0] += (mouseX - mouseXPrev);
+        canvasOffset[1] += (mouseY - mouseYPrev);
     }
+    // Horizontal bounds
+    if (canvasOffset[0] < canvas.width / 2 - (canvas.width / 2) * zoom) {
+        canvasOffset[0] = canvas.width / 2 - (canvas.width / 2) * zoom; // Right bound
+    } else if (canvasOffset[0] > -(canvas.width / 2 - (canvas.width / 2) * zoom)) {
+        canvasOffset[0] = -(canvas.width / 2 - (canvas.width / 2) * zoom); // Left bound
+    }
+
+    // Vertical bounds
+    if (canvasOffset[1] < canvas.height / 2 - (canvas.height / 2) * zoom) {
+        canvasOffset[1] = canvas.height / 2 - (canvas.height / 2) * zoom; // Bottom bound
+    } else if (canvasOffset[1] > -(canvas.height / 2 - (canvas.height / 2) * zoom)) {
+        canvasOffset[1] = -(canvas.height / 2 - (canvas.height / 2) * zoom); // Top bound
+    }
+
+    //console.log(`Offset: ${canvasOffset[0]}, ${canvasOffset[1]}`);
 
     // draw canvas
     drawBackground();

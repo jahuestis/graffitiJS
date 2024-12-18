@@ -8,6 +8,8 @@ const width = 128;
 const height = 128;
 var tiles = Array.from({ length: width }, () => Array(height).fill(0));
 
+const cooldown = 5000 // 5 second cooldown
+
 
 socket.on('connection', (ws) => {
     clients.set(ws, Date.now());
@@ -21,17 +23,25 @@ socket.on('connection', (ws) => {
             const messageJSON = JSON.parse(messageStr);
 
             if (messageJSON.type === 'pixelchange') {
-                const data = JSON.parse(messageJSON.data);
-                const pixelPosition = data.position;
-                const pixelColor = data.color;
-                if (pixelPosition[0] < 0 || pixelPosition[0] >= width || pixelPosition[1] < 0 || pixelPosition[1] >= height) {
-                    throw new Error("Invalid pixel position");
+                const remainingCooldown = clients.get(ws) + cooldown - Date.now();
+                if (remainingCooldown <= 0) {
+                    const data = JSON.parse(messageJSON.data);
+                    const pixelPosition = data.position;
+                    const pixelColor = data.color;
+                    if (pixelPosition[0] < 0 || pixelPosition[0] >= width || pixelPosition[1] < 0 || pixelPosition[1] >= height) {
+                        throw new Error("Invalid pixel position");
+                    }
+                    if (pixelColor < 0 || pixelColor > 7) {
+                        throw new Error("Invalid pixel color");
+                    }
+                    tiles[pixelPosition[0]][pixelPosition[1]] = pixelColor;
+                    clients.set(ws, Date.now());
+                    broadcast(jsonMessage('pixelchange', jsonPixel(pixelPosition[0], pixelPosition[1], pixelColor)));
+                } else {
+                    ws.send(jsonMessage('alert', jsonText(`cooldown: ${Math.ceil(remainingCooldown / 1000)} seconds`) ))
+                    throw new Error("Client attempted to change pixel within Cooldown period");
                 }
-                if (pixelColor < 0 || pixelColor > 7) {
-                    throw new Error("Invalid pixel color");
-                }
-                tiles[pixelPosition[0]][pixelPosition[1]] = pixelColor;
-                broadcast(jsonMessage('pixelchange', jsonPixel(pixelPosition[0], pixelPosition[1], pixelColor)));
+                
             }
 
 
@@ -84,5 +94,11 @@ function jsonPixel(x, y, color) {
     return JSON.stringify({
         position: [x, y],
         color: color
+    });
+}
+
+function jsonText(text) {
+    return JSON.stringify({
+        text: text
     });
 }

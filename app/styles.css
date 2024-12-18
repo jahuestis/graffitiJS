@@ -18,6 +18,23 @@ body {
     color: red;
 }
 
+#cooldown {
+    color: red;
+}
+
+#download {
+    border: 2px solid lime;    /* Lime border */
+    background-color: transparent; /* No background */
+    color: lime;
+    font-size: 1.2em;     
+    margin-top: 2vh;
+}
+
+button:active {
+    transform: scale(0.95); /* Slightly shrink the button */
+
+}
+
 .red {
     color: red;
     accent-color: red;

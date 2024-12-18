@@ -17,6 +17,8 @@ var mouseY = 0;
 var gridX = 0;
 var gridY = 0;
 var zoom = 1;
+var zoomTargetX = 0;
+var zoomTargetY = 0;
 var offsetting = false;
 
 const colorButtons = Array.from(document.getElementsByName("color"));
@@ -31,6 +33,7 @@ colorButtons.forEach(color => {
 });
 
 const alertElement = document.getElementById('alert');
+const cooldownElement = document.getElementById('cooldown');
 
 // -- Server/Client handling -- 
 const socket = new WebSocket('ws://localhost:3000')
@@ -38,9 +41,8 @@ const socket = new WebSocket('ws://localhost:3000')
 socket.addEventListener('message', (event) => {
     const message = JSON.parse(event.data);
     const messageType = message.type;
-
+    const data = JSON.parse(message.data);
     if (messageType === 'fullcanvas') { 
-        data = JSON.parse(message.data);
         pixels = data.tiles;
         width = data.width;
         height = data.height;
@@ -49,15 +51,17 @@ socket.addEventListener('message', (event) => {
         canvasLoaded = true;
     } else if (messageType === 'pixelchange') {
         alertElement.style.display = 'none';
-
-        const data = JSON.parse(message.data);
         const pixelPosition = data.position;
         const pixelColor = data.color;
 
         console.log(`pixelchange: ${pixelPosition[0]}, ${pixelPosition[1]}, ${pixelColor}`);
         pixels[pixelPosition[0]][pixelPosition[1]] = pixelColor;
+    } else if (messageType ==='cooldown') {
+        const cooldown = data.cooldown;
+        cooldownElement.textContent = `cooldown: ${Math.ceil(cooldown / 1000)} seconds`;
+        cooldownElement.style.display = 'block';
+        setTimeout(endCooldown, cooldown);
     } else if (messageType === 'alert') {
-        const data = JSON.parse(message.data);
         alertElement.textContent = data.text;
         alertElement.style.display = 'block';
     } else {
@@ -95,6 +99,9 @@ window.onload = () => {
             zoom = Math.max(zoom * 0.75, 1); // Decrease zoom by 10% (min zoom is 0.1x)
         }
 
+        zoomTargetX = mouseX;
+        zoomTargetY = mouseY;
+
         console.log(`Zoom: ${zoom}`);
 
     }, { passive: false });
@@ -110,6 +117,7 @@ window.onload = () => {
     });
 
     alertElement.style.display = 'none';
+    cooldownElement.style.display = 'none';
     requestAnimationFrame(update);
 }
 
@@ -182,12 +190,35 @@ function drawBackground() {
 function drawPixel(x, y, color) {
     context.fillStyle = colors[color];
     context.fillRect(
-        (x) * zoom * upscale + (canvasOffset[0] + (canvas.width / 2) - (canvas.width / 2) * zoom), 
-        (y) * zoom * upscale + (canvasOffset[1] + (canvas.width / 2) - (canvas.height / 2) * zoom), 
+        x * zoom * upscale + (canvasOffset[0] + (canvas.width / 2) - (canvas.width / 2) * zoom), 
+        y * zoom * upscale + (canvasOffset[1] + (canvas.width / 2) - (canvas.height / 2) * zoom), 
         zoom * upscale, 
         zoom * upscale
     );
 }
 
+function endCooldown() {
+    cooldownElement.style.display = 'none';
+}
+
+document.getElementById('download').addEventListener('click', downloadCanvas);
+
+function downloadCanvas() {
+    const downloadCanvas = document.createElement('canvas')
+    downloadCanvas.height = height * upscale;
+    downloadCanvas.width = width * upscale;
+    
+    const downloadContext = downloadCanvas.getContext('2d');
+    for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+            downloadContext.fillStyle = colors[pixels[x][y]];
+            downloadContext.fillRect(x * upscale, y * upscale, upscale, upscale);
+        }
+    }
+    const link = document.createElement('a');
+    link.download = 'graffitiJS.png';
+    link.href = downloadCanvas.toDataURL('image/png');
+    link.click();
+}
 
 

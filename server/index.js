@@ -8,7 +8,7 @@ const width = 128;
 const height = 128;
 var tiles = Array.from({ length: width }, () => Array(height).fill(0));
 
-const cooldown = 5000 // 5 second cooldown
+const cooldown = 0;
 
 
 socket.on('connection', (ws) => {
@@ -38,7 +38,7 @@ socket.on('connection', (ws) => {
                     clients.set(ws, Date.now());
                     broadcast(jsonMessage('pixelchange', jsonPixel(pixelPosition[0], pixelPosition[1], pixelColor)));
                 } else {
-                    ws.send(jsonMessage('alert', jsonText(`cooldown: ${Math.ceil(remainingCooldown / 1000)} seconds`) ))
+                    ws.send(jsonMessage('cooldown', jsonCooldown(remainingCooldown)));
                     throw new Error("Client attempted to change pixel within Cooldown period");
                 }
                 
@@ -100,5 +100,11 @@ function jsonPixel(x, y, color) {
 function jsonText(text) {
     return JSON.stringify({
         text: text
+    });
+}
+
+function jsonCooldown(cooldown) {
+    return JSON.stringify({
+        cooldown: cooldown
     });
 }

@@ -1,15 +1,50 @@
+const fs = require('fs');
+const path = require('path');
 const WebSocketServer = require('ws').Server;
 const socket = new WebSocketServer({ 
     port: 3000, 
 });
 
-var clients = new Map();
-const width = 128;
-const height = 128;
-var tiles = Array.from({ length: width }, () => Array(height).fill(0));
-
 const cooldown = 0;
+var clients = new Map();
+var width;
+var height;
+var tiles;
+function loadTiles() {
+    try {
+        const filePath = path.join(__dirname, 'canvas.json');
+        if (fs.existsSync(filePath)) {
+            const data = fs.readFileSync(filePath, 'utf8');
+            const canvasData = JSON.parse(data);
+            tiles = canvasData.tiles;
+            width = canvasData.width;
+            height = canvasData.height;
+        } else {
+            throw new Error("Canvas file not found");
+        }
+    } catch (error) {
+        console.error(error);
+        width = 128;
+        height = 128;
+        tiles = Array.from({ length: width }, () => Array(height).fill(0));
+    }
+}
 
+function writeTiles() {
+    try {
+        const filePath = path.join(__dirname, 'canvas.json');
+        const data = jsonCanvas(tiles, width, height);
+        fs.writeFileSync(filePath, data);
+        console.log("Canvas saved");
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+
+loadTiles();
+
+// Server Behavior
 
 socket.on('connection', (ws) => {
     clients.set(ws, Date.now());
@@ -53,6 +88,8 @@ socket.on('connection', (ws) => {
     ws.on('close', () => {
         clients.delete(ws);
         console.log('Client disconnected');
+        writeTiles();
+
     });
 
     ws.on('error', (error) => {

@@ -42,7 +42,8 @@ socket.addEventListener('message', (event) => {
     const message = JSON.parse(event.data);
     const messageType = message.type;
     const data = JSON.parse(message.data);
-    if (messageType === 'fullcanvas') { 
+    if (messageType === 'fullcanvas') {
+        console.log(message.data); 
         pixels = data.tiles;
         width = data.width;
         height = data.height;

@@ -9,7 +9,7 @@ var canvasLoaded = false;
 const upscale = 8;
 var canvasOffset = [0, 0];
 
-const colors = ['black', 'red', 'orange', 'yellow', 'lime', 'cyan', 'magenta', 'white'];
+const colors = ['black', 'red', 'orange', 'yellow', 'lime', 'dodgerblue', 'magenta', 'white'];
 var mouseXPrev = 0;
 var mouseYPrev = 0;
 var mouseX = 0;

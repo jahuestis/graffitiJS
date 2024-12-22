@@ -35,6 +35,15 @@ button:active {
 
 }
 
+#colors {
+    width: 60%;
+    margin: auto;
+}
+
+.color {
+    display: inline-block;
+}
+
 .red {
     color: red;
     accent-color: red;
@@ -71,6 +80,21 @@ button:active {
 }
 
 .black {
+    color: #333333;
+    accent-color: #333333;
+}
+
+.gray {
     color: gray;
     accent-color: gray;
+}
+
+.brown {
+    color: brown;
+    accent-color: brown;
+}
+
+.pink {
+    color: pink;
+    accent-color: pink;
 }

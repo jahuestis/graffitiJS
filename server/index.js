@@ -10,6 +10,7 @@ var clients = new Map();
 var width;
 var height;
 var tiles;
+
 function loadTiles() {
     try {
         const filePath = path.join(__dirname, 'canvas.json');
@@ -41,7 +42,6 @@ function writeTiles() {
     }
 }
 
-
 loadTiles();
 
 // Server Behavior
@@ -66,7 +66,7 @@ socket.on('connection', (ws) => {
                     if (pixelPosition[0] < 0 || pixelPosition[0] >= width || pixelPosition[1] < 0 || pixelPosition[1] >= height) {
                         throw new Error("Invalid pixel position");
                     }
-                    if (pixelColor < 0 || pixelColor > 7) {
+                    if (pixelColor < 0 || pixelColor > 10) {
                         throw new Error("Invalid pixel color");
                     }
                     tiles[pixelPosition[0]][pixelPosition[1]] = pixelColor;

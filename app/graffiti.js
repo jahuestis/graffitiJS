@@ -9,7 +9,7 @@ var canvasLoaded = false;
 const upscale = 8;
 var canvasOffset = [0, 0];
 
-const colors = ['black', 'red', 'orange', 'yellow', 'lime', 'dodgerblue', 'magenta', 'white'];
+const colors = ['black', 'red', 'orange', 'yellow', 'lime', 'dodgerblue', 'magenta', 'white', 'gray', 'brown', 'pink'];
 var mouseXPrev = 0;
 var mouseYPrev = 0;
 var mouseX = 0;
@@ -54,7 +54,7 @@ socket.addEventListener('message', (event) => {
         const pixelPosition = data.position;
         const pixelColor = data.color;
 
-        console.log(`pixelchange: ${pixelPosition[0]}, ${pixelPosition[1]}, ${pixelColor}`);
+        //console.log(`pixelchange: ${pixelPosition[0]}, ${pixelPosition[1]}, ${pixelColor}`);
         pixels[pixelPosition[0]][pixelPosition[1]] = pixelColor;
     } else if (messageType ==='cooldown') {
         const cooldown = data.cooldown;
@@ -102,7 +102,7 @@ window.onload = () => {
         zoomTargetX = mouseX;
         zoomTargetY = mouseY;
 
-        console.log(`Zoom: ${zoom}`);
+        //console.log(`Zoom: ${zoom}`);
 
     }, { passive: false });
 

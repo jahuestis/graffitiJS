@@ -34,7 +34,11 @@ function loadTiles() {
 function writeTiles() {
     try {
         const filePath = path.join(__dirname, 'canvas.json');
-        const data = jsonCanvas(tiles, width, height);
+        const data = JSON.stringify({
+            tiles: tiles, 
+            width: width, 
+            height: height
+        });
         fs.writeFileSync(filePath, data);
         console.log("Canvas saved");
     } catch (error) {
@@ -47,48 +51,54 @@ loadTiles();
 // Server Behavior
 
 socket.on('connection', (ws) => {
-    clients.set(ws, Date.now());
-    console.log("Client conncted");
-    console.log("Sending client full canvas");
-    ws.send(jsonMessage('fullcanvas', jsonCanvas(tiles, width, height)));
+    ws.send(jsonMessage('requestClient', 0));
 
     ws.on('message', (message) => {
         try {
             const messageStr = message instanceof Buffer ? message.toString() : message;
             const messageJSON = JSON.parse(messageStr);
-
-            if (messageJSON.type === 'pixelchange') {
-                const remainingCooldown = clients.get(ws) + cooldown - Date.now();
-                if (remainingCooldown <= 0) {
-                    const data = JSON.parse(messageJSON.data);
-                    const pixelPosition = data.position;
-                    const pixelColor = data.color;
-                    if (pixelPosition[0] < 0 || pixelPosition[0] >= width || pixelPosition[1] < 0 || pixelPosition[1] >= height) {
-                        throw new Error("Invalid pixel position");
-                    }
-                    if (pixelColor < 0 || pixelColor > 10) {
-                        throw new Error("Invalid pixel color");
-                    }
-                    tiles[pixelPosition[0]][pixelPosition[1]] = pixelColor;
+            if (messageJSON.application === 'graffitijs') {
+                if (messageJSON.type === 'confirmClient') {
                     clients.set(ws, Date.now());
-                    broadcast(jsonMessage('pixelchange', jsonPixel(pixelPosition[0], pixelPosition[1], pixelColor)));
-                } else {
-                    ws.send(jsonMessage('cooldown', jsonCooldown(remainingCooldown)));
-                    throw new Error("Client attempted to change pixel within Cooldown period");
+                    console.log("Client conncted");
+                    console.log("Sending client full canvas");
+                    ws.send(jsonCanvas(tiles, width, height));
+                } else if (messageJSON.type === 'pixelchange') {
+                    const remainingCooldown = clients.get(ws) + cooldown - Date.now();
+                    if (remainingCooldown <= 0) {
+                        const data = messageJSON.data;
+                        const pixelPosition = data.position;
+                        const pixelColor = data.color;
+                        if (pixelPosition[0] < 0 || pixelPosition[0] >= width || pixelPosition[1] < 0 || pixelPosition[1] >= height) {
+                            throw new Error("Invalid pixel position");
+                        }
+                        if (pixelColor < 0 || pixelColor > 10) {
+                            throw new Error("Invalid pixel color");
+                        }
+                        tiles[pixelPosition[0]][pixelPosition[1]] = pixelColor;
+                        clients.set(ws, Date.now());
+                        broadcast(jsonPixel(pixelPosition[0], pixelPosition[1], pixelColor));
+                    } else {
+                        ws.send(jsonCooldown(remainingCooldown));
+                        throw new Error("Client attempted to change pixel within Cooldown period");
+                    }
+                    
                 }
-                
+            } else {
+                console.log(messageJSON.application)
             }
-
-
+            
         } catch (error) {
             console.log(error);
         }
     });
 
     ws.on('close', () => {
-        clients.delete(ws);
-        console.log('Client disconnected');
-        writeTiles();
+        if (clients.has(ws)) {
+            clients.delete(ws);
+            console.log('Client disconnected');
+            writeTiles();
+        }
 
     });
 
@@ -114,34 +124,29 @@ function broadcast(message) {
 
 function jsonMessage(type, data) {
     return JSON.stringify({
+        application: 'graffitijs',
         type: type,
         data: data
     });
 }
 
 function jsonCanvas(tiles, width, height) {
-    return JSON.stringify({
+    return jsonMessage('fullcanvas', {
         tiles: tiles,
         width: width,
         height: height
-    })
+    });
 }
 
 function jsonPixel(x, y, color) {
-    return JSON.stringify({
+    return jsonMessage('pixelchange', {
         position: [x, y],
         color: color
     });
 }
 
-function jsonText(text) {
-    return JSON.stringify({
-        text: text
-    });
-}
-
 function jsonCooldown(cooldown) {
-    return JSON.stringify({
+    return jsonMessage('cooldown', {
         cooldown: cooldown
     });
 }

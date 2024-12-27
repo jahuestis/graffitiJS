@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const WebSocketServer = require('ws').Server;
 const socket = new WebSocketServer({ 
-    port: 3000, 
+    port: 3001, 
 });
 
 const cooldown = 0;
@@ -51,6 +51,13 @@ loadTiles();
 // Server Behavior
 
 socket.on('connection', (ws) => {
+    // Set up a keepalive ping
+    const interval = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.ping(); // Send ping frame
+        }
+    }, 30000); // Send every 30 seconds
+
     ws.send(jsonMessage('requestClient', 0));
 
     ws.on('message', (message) => {
@@ -94,6 +101,7 @@ socket.on('connection', (ws) => {
     });
 
     ws.on('close', () => {
+        clearInterval(interval);
         if (clients.has(ws)) {
             clients.delete(ws);
             console.log('Client disconnected');

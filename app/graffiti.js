@@ -36,7 +36,7 @@ const alertElement = document.getElementById('alert');
 const cooldownElement = document.getElementById('cooldown');
 
 // -- Server/Client handling -- 
-const socket = new WebSocket('ws://localhost:3000')
+const socket = new WebSocket('wss://node.beanswithwater.net/graffiti')
 
 socket.addEventListener('message', (event) => {
     const message = JSON.parse(event.data);
